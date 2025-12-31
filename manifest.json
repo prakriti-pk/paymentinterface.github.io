@@ -1,9 +1,21 @@
 {
-  "name": "Pay App MVP",
+  "name": "Payment Interface MVP",
   "short_name": "PhonePe",
-  "start_url": ".",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icons/bitmap(5).png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/bitmap(6).png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
