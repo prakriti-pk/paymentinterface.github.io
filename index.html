@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhonePe - UPI Payment App</title>
+    <!-- Add Lucide Library -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Add ZXing Library for QR Scanning -->
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: #000;
+            position: relative;
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+        }
+
+        input {
+            font-family: inherit;
+            border: none;
+            outline: none;
+        }
+
+        /* --- ORIGINAL PHONEPE STYLES --- */
+
+        /* Home Screen */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background-color: #facc15;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .help-btn {
+            width: 40px;
+            height: 40px;
+            background-color: #1f2937;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+        }
+
+        .banner {
+            margin: 0 1rem 1.5rem;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .banner img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .section {
+            padding: 0 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .quick-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            text-align: center;
+        }
+
+        .quick-action-icon {
+            width: 64px;
+            height: 64px;
+            background-color: #9333ea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        .quick-action-label {
+            font-size: 0.75rem;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .service-icon {
+            width: 64px;
+            height: 64px;
+            background-color: #1f2937;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            border: 1px solid #374151;
+        }
+
+        .recharge-card {
+            background-color: #111827;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin: 0 1rem 1.5rem;
+        }
+
+        .recharge-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .view-all-btn {
+            color: #a855f7;
+            font-size: 0.875rem;
+        }
+
+        .promo-card {
+            background-color: #111827;
+            border-radius: 1rem;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background-color: #9333ea;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .promo-emoji {
+            position: absolute;
+            bottom: 0.5rem;
+            right: 0.5rem;
+            font-size: 3rem;
+            opacity: 0.3;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #000;
+            border-top: 1px solid #1f2937;
+            padding: 0.75rem 1rem;
+            z-index: 50;
+        }
+
+        .nav-content {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            position: relative;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            color: #6b7280;
+        }
+
+        .nav-item.active {
+            color: #fff;
+        }
+
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-label {
+            font-size: 0.75rem;
+        }
+
+        .qr-btn {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: -24px;
+            width: 56px;
+            height: 56px;
+            background-color: #9333ea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(147, 51, 234, 0.3);
+        }
+
+        .qr-btn svg {
+            width: 28px;
+            height: 28px;
+            color: #fff;
+        }
+
+        /* Screen Headers */
+        .screen-header {
+            background-color: #9333ea;
+            padding: 1.5rem 1rem 2rem;
+            color: #fff;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-btn {
+            color: #fff;
+        }
+
+        .search-box {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border-radius: 0.75rem;
+            background-color: rgba(147, 51, 234, 0.5);
+            color: #fff;
+            border: 1px solid rgba(168, 85, 247, 0.5);
+        }
+
+        .search-input::placeholder {
+            color: rgba(216, 180, 254, 0.7);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        /* Send Money Screen (Contact List) */
+        .contacts-section {
+            padding: 1.5rem 1rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background-color: #111827;
+            border-radius: 0.75rem;
+            margin-bottom: 0.5rem;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .contact-item:hover {
+            background-color: #1f2937;
+        }
+
+        .contact-item.selected {
+            background-color: #9333ea;
+        }
+
+        .contact-avatar {
+            width: 48px;
+            height: 48px;
+            background-color: #7c3aed;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .contact-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .contact-name {
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .contact-upi {
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        .radio-check {
+            width: 24px;
+            height: 24px;
+            background-color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radio-inner {
+            width: 12px;
+            height: 12px;
+            background-color: #9333ea;
+            border-radius: 50%;
+        }
+
+        .amount-section {
+            margin-top: 1.5rem;
+        }
+
+        .amount-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .amount-input-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .rupee-symbol {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .amount-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 2.5rem;
+            background-color: #111827;
+            border: 2px solid #374151;
+            border-radius: 0.75rem;
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .amount-input:focus {
+            border-color: #9333ea;
+        }
+
+        .quick-amounts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .quick-amount-btn {
+            padding: 0.5rem;
+            background-color: #111827;
+            color: #a855f7;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+        }
+
+        .quick-amount-btn:hover {
+            background-color: #1f2937;
+        }
+
+        .message-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: #111827;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            color: #fff;
+            margin-bottom: 1.5rem;
+        }
+
+        .message-input::placeholder {
+            color: #6b7280;
+        }
+
+        .pay-btn {
+            width: 100%;
+            padding: 1rem;
+            background-color: #9333ea;
+            color: #fff;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .pay-btn:hover {
+            background-color: #7e22ce;
+        }
+
+        .pay-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal {
+            background-color: #111827;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1rem;
+            text-align: center;
+            border: 1px solid #1f2937;
+            width: 90%;
+            max-width: 320px;
+        }
+
+        .processing-icon {
+            width: 64px;
+            height: 64px;
+            background-color: rgba(147, 51, 234, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            animation: pulse 2s infinite;
+        }
+
+        .processing-inner {
+            width: 32px;
+            height: 32px;
+            background-color: #9333ea;
+            border-radius: 50%;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Scanner Screen */
+        .scanner-screen {
+            background-color: #000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scanner-header {
+            padding: 1.5rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .scanner-info {
+            text-align: center;
+            padding: 0 1rem 2rem;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .scanner-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            margin-top: -135px;
+        }
+
+        #qr-video {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        .scanner-frame {
+            width: 256px;
+            height: 256px;
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+            margin-top: -60px;
+        }
+        /* --- Success Screen --- */
+       .success-check-svg {
+    /* This controls the size of the tick icon */
+           width: 60px;
+           height: 60px;
+       }
+        .corner {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            border: 4px solid #a855f7;
+        }
+
+        .corner-tl {
+            top: 0;
+            left: 0;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .corner-tr {
+            top: 0;
+            right: 0;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .corner-bl {
+            bottom: 0;
+            left: 0;
+            border-right: none;
+            border-top: none;
+        }
+
+        .corner-br {
+            bottom: 0;
+            right: 0;
+            border-left: none;
+            border-top: none;
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #a855f7, transparent);
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.8);
+            animation: scan 2s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+            0%, 100% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: calc(100% - 4px); opacity: 0; }
+        }
+
+        .scanner-instructions {
+            padding: 0 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            flex-shrink: 0;
+        }
+
+        .scanner-actions {
+            position: absolute;
+            bottom: 2rem;
+            left: 0;
+            right: 0;
+            padding: 0 1rem;
+            z-index: 20;
+        }
+
+        .scanner-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+        }
+
+        .scanner-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+        }
+
+        .scanner-btn-icon {
+            width: 64px;
+            height: 64px;
+            background-color: #111827;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #374151;
+        }
+
+        .scanner-btn-icon.primary {
+            background-color: #9333ea;
+            border-color: #9333ea;
+        }
+
+        /* --- NEW REACT-STYLE INTERFACE CSS --- */
+
+        .payment-entry-screen {
+            min-height: 100vh;
+            background-color: #0a0a0a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pe-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem 1rem;
+        }
+
+        .pe-card {
+            background-color: #1a1a1a;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 0.5rem 0.9rem; /* Reduced margin for closer gap */
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+        }
+
+        .pe-avatar {
+            width: 3rem;
+            height: 3rem;
+            background-color: #d946ef;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        .pe-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .pe-upi-row {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+
+        .pe-input-wrapper {
+            margin: 0.5rem 1rem; /* Closer gap */
+        }
+
+        .pe-amount-input {
+            width: 100%;
+            background: transparent;
+            border: 1.45px solid #8b5cf6;
+            border-radius: 0.75rem;
+            padding: 1rem 1rem 1rem 2.5rem;
+            color: #fff;
+            font-size: 1.125rem;
+            font-family: inherit;
+        }
+
+        .pe-amount-input:focus {
+            outline: none;
+            border-color: #a78bfa;
+        }
+
+        .pe-rupee-icon {
+            position: absolute;
+            left: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #fff;
+            font-size: 1.25rem;
+            pointer-events: none;
+        }
+
+        .pe-msg-input {
+            width: 100%;
+            background: transparent;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 1rem 1rem 1rem 1.2rem; /* Aligned with Amount */
+            color: #fff;
+            margin-bottom: 0;
+            font-family: inherit;
+        }
+
+        .pe-btn {
+            margin: 0 1rem;
+            width: calc(100% - 2rem);
+            background-color: #3a3a3a;
+            color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .pe-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* --- PIN ENTRY SCREEN STYLES --- */
+        .pin-screen {
+            min-height: 100vh;
+            background-color: #c9c5d1; /* Light Purple/Gray from React reference */
+            color: #3d3856;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2rem 0 0;
+        }
+
+        .pin-header {
+            text-align: center;
+            margin-top: 110px;
+            font-weight: 400;
+            letter-spacing: 0.75px;
+            font-size: 0,8rem;
+            color: #050507;
+        }
+
+        .pin-dots-container {
+            display: flex;
+            gap:0.65rem;
+            margin-bottom: 1rem;
+        }
+
+        .pin-dot {
+            width: 35px;
+            height: 2px;
+            background-color: #8d88a1; /* Empty dot color */
+            transition: background-color 0.2s;
+        }
+
+        .pin-dot.filled {
+            background-color: #090442; /* Filled dot color */
+        }
+
+        .pin-info-box {
+            background-color: #f5d97f; /* Yellow background */
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+            max-width: 90%;
+        }
+
+        .pin-info-text {
+            font-size: 0.7rem;
+            line-height: 1.4;
+            color: #3d3856;
+        }
+
+        .keypad-container {
+            width: 100%;
+            max-width: 446px;
+            padding-bottom: 0.75rem;
+            margin: 0 auto;
+        }
+
+        .keypad-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem; /* Spacing between keys */
+            margin-bottom: 0.75rem;
+        }
+
+        .key-btn {
+            width: 55px;
+            height: 55px;
+            aspect-square: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #090442;
+            background: transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.1s;
+            user-select: none;
+            margin: 0 auto;
+        }
+
+        .key-btn:active {
+            transform: scale(0.7);
+        }
+
+        .key-btn.action {
+            background-color: #090442;
+            color: #c9c5d1;
+        }
+
+        /* --- PAYMENT SUCCESS SCREEN STYLES --- */
+        .success-screen {
+            min-height: 100vh;
+            background-color: #398E3D; /* Green background */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1rem;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .success-header {
+            text-align: center;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .success-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .success-time {
+            color: #f5f5dc; /* Off-white */
+            font-size: 0.875rem;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .success-check-circle {
+            width: 80px;
+            height: 80px;
+            background-color: #f5f5dc; /* Yellow circle */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            animation: scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .receipt-card {
+            background-color: #191919; /* Dark card background */
+            border-radius: 1.5rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .receipt-avatar {
+            width: 4rem;
+            height: 4rem;
+            background-color: #4a9cd9; /* Blue avatar */
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .receipt-details {
+            flex: 1;
+        }
+
+        .receipt-name {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .receipt-upi {
+            color: #d1d5db;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .receipt-amount-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 1rem;
+        }
+
+        .receipt-amount {
+            font-size: 2rem;
+            font-weight: 550;
+        }
+
+        .split-tag {
+            color: #c084fc; /* Purple text */
+            font-weight: 400;
+            font-size: 0.875rem;
+            background: rgba(192, 84, 252, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            animation: slideUp 1s ease-out;
+        }
+
+        .action-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            background-color: #6b4a8f; /* Dark purple button */
+            color: white;
+            padding: 1rem;
+            border-radius: 9999px; /* Fully rounded */
+            font-weight: 400;
+            cursor: pointer;
+        }
+
+        .ad-card {
+            background-color: white;
+            color: #374151;
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            animation: slideUp 1.2s ease-out;
+        }
+
+        .ad-badge {
+            background-color: #fbbf24; /* Yellow badge */
+            color: black;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            text-transform: uppercase;
+        }
+
+        .done-btn {
+            background: transparent;
+            border: 1.5px solid #9333EA;
+            color: #9333EA;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: center;
+            width: 100%;
+            margin-top: auto;
+            animation: fadeInUp 1.5s ease-out;
+            border-shadow: none;
+        }
+
+        /* Animations */
+        @keyframes scaleUp {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .toast {
+            background-color: #1f2937;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border-left: 4px solid #9333ea;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 0.9rem;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success { border-left-color: #10b981; }
+        .toast.error { border-left-color: #ef4444; }
+
+        /* SVG Icons */
+        svg {
+            width: 24px;
+            height: 24px;
+        }
+       .thin-icon {
+            stroke-width: 1.25 !important;
+        }
+                /* --- NEW CONNECTING SECURELY SCREEN STYLES --- */
+        .connecting-screen {
+            min-height: 100vh;
+            background-color: #050507; /* Deep black/purple to match your app */
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 150; /* Ensure it sits on top of other screens */
+        }
+
+        .shield-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        /* The pulsing rings animation */
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #a855f7; /* Your app's purple color */
+            opacity: 0;
+            animation: ripple 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+        }
+
+        .pulse-ring:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .pulse-ring:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0.5); opacity: 0.8; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .shield-icon {
+            width: 64px;
+            height: 64px;
+            color: #a855f7;
+            z-index: 10;
+        }
+
+        .connecting-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .connecting-sub {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            animation: pulseText 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+   <!-- Payment Success Sound -->
+<audio id="successSound" src="success.mp3" preload="auto"></audio>
+   <div class="container">
+        <!-- Toast Container -->
+        <div id="toastContainer" class="toast-container"></div>
+
+        <!-- Home Screen -->
+        <div id="homeScreen">
+            <div class="header">
+                <div class="avatar">G</div>
+                <button class="help-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke-width="1.0" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="banner">
+                <img src="banner.jpg" alt="Promotional Banner">
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Money Transfers</h2>
+                <div class="grid-4">
+                    <button class="quick-action" onclick="showSendMoney()">
+                        <div class="quick-action-icon">
+                            <i data-lucide="phone"></i>
+                        </div>
+                        <span class="quick-action-label">To Mobile Number</span>
+                    </button>
+                    <button class="quick-action">
+                        <div class="quick-action-icon">
+                            <i data-lucide="landmark"></i>
+                        </div>
+                        <span class="quick-action-label">To Bank & Self A/c</span>
+                    </button>
+                    <button class="quick-action">
+                        <div class="quick-action-icon">
+                            <i data-lucide="tag"></i>
+                        </div>
+                        <span class="quick-action-label">Refer & Get ₹200</span>
+                    </button>
+                    <button class="quick-action">
+                        <div class="quick-action-icon">
+                            <i data-lucide="indian-rupee"></i>
+                        </div>
+                        <span class="quick-action-label">Check Balance</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="recharge-card">
+                <div class="recharge-header">
+                    <h2>Recharge & Bills</h2>
+                    <button class="view-all-btn">View All</button>
+                </div>
+                <div class="grid-4">
+                    <button class="quick-action">
+                        <div class="service-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                            </svg>
+                        </div>
+                        <span class="quick-action-label">Mobile Recharge</span>
+                    </button>
+                    <button class="quick-action">
+                        <div class="service-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"></path>
+                            </svg>
+                        </div>
+                        <span class="quick-action-label">FASTag Recharge</span>
+                    </button>
+                    <button class="quick-action">
+                        <div class="service-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                        </div>
+                        <span class="quick-action-label">Electricity Bill</span>
+                    </button>
+                    <button class="quick-action">
+                        <div class="service-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <circle cx="8" cy="8" r="6"></circle>
+                                <path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path>
+                                <path d="M7 6h1v4"></path>
+                                <path d="m16.71 13.88.7.71-2.82 2.82"></path>
+                            </svg>
+                        </div>
+                        <span class="quick-action-label">Loan Repayment</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="grid-2">
+                    <div class="promo-card">
+                        <span class="badge">Pre-approved</span>
+                        <h3>Loans</h3>
+                        <div class="promo-emoji">💰</div>
+                    </div>
+                    <div class="promo-card">
+                        <span class="badge">Offer</span>
+                        <h3>Insurance</h3>
+                        <div class="promo-emoji">🏍️</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+    <div class="grid-2">
+        <div class="promo-card">
+            <span class="badge">New</span>
+            <h3>Gold</h3>
+            <div class="promo-emoji">🪙</div>
+        </div>
+        <div class="promo-card">
+            <span class="badge">Offers</span>
+            <h3>Travel & Transit</h3>
+            <div class="promo-emoji">🧳</div>
+          </div>
+        </div>
+     </div>
+
+            <div style="height: 80px;"></div>
+        </div>
+
+        <!-- Send Money Screen (Original List View) -->
+        <div id="sendMoneyScreen" class="hidden">
+            <div class="screen-header">
+                <div class="header-top">
+                    <button class="back-btn" onclick="showHome()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                    </button>
+                    <h2>Send Money</h2>
+                </div>
+                <div class="search-box">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Enter UPI ID, phone or name">
+                </div>
+            </div>
+
+            <div class="contacts-section">
+                <h3 style="margin-bottom: 1rem; color: #fff;">Recent</h3>
+                <div id="contactsList"></div>
+
+                <div id="amountSection" class="amount-section hidden">
+                    <label class="amount-label">Enter Amount</label>
+                    <div class="amount-input-wrapper">
+                        <span class="rupee-symbol">₹</span>
+                        <input type="number" id="amountInput" class="amount-input" placeholder="0">
+                    </div>
+                    <div class="quick-amounts">
+                        <button class="quick-amount-btn" onclick="setAmount('100')">₹100</button>
+                        <button class="quick-amount-btn" onclick="setAmount('500')">₹500</button>
+                        <button class="quick-amount-btn" onclick="setAmount('1000')">₹1000</button>
+                        <button class="quick-amount-btn" onclick="setAmount('2000')">₹2000</button>
+                    </div>
+                    <input type="text" class="message-input" placeholder="Add a message (optional)">
+                    <button class="pay-btn" onclick="processContactPayment()" id="payBtn" disabled>Pay ₹0</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scanner Screen -->
+        <div id="scannerScreen" class="scanner-screen hidden">
+            <div class="scanner-header">
+                <button onclick="showHome()" style="color: #fff;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+                <h2 style="color: #fff;">Scan Any QR Code</h2>
+                <button id="flashBtn" onclick="toggleFlash()" style="color: #fff;">
+                    <svg id="flashIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M18 6 6 18M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="scanner-info">
+                Align QR code within frame to scan
+            </div>
+
+            <div class="scanner-area">
+                <video id="qr-video" playsinline muted></video>
+                <div class="scanner-frame">
+                    <div class="corner corner-tl"></div>
+                    <div class="corner corner-tr"></div>
+                    <div class="corner corner-bl"></div>
+                    <div class="corner corner-br"></div>
+                    <div class="scan-line"></div>
+                </div>
+            </div>
+
+
+
+            <div class="scanner-actions">
+                <div class="scanner-buttons">
+                    <button class="scanner-btn" onclick="triggerFileUpload()">
+                        <div class="scanner-btn-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                        </div>
+                        <span style="font-size: 0.875rem;">Gallery</span>
+                    </button>
+                    <button class="scanner-btn">
+                        <div class="scanner-btn-icon primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <path d="M7 7h.01M7 12h.01M7 17h.01M12 7h.01M12 12h.01M12 17h.01M17 7h.01M17 12h.01M17 17h.01"></path>
+                            </svg>
+                        </div>
+                        <span style="font-size: 0.875rem;">My QR</span>
+                    </button>
+                </div>
+            </div>
+
+            <input type="file" id="qr-input-file" accept="image/*" class="hidden">
+        </div>
+
+        <!-- NEW: Payment Entry Screen (React Style) -->
+        <div id="paymentEntryScreen" class="payment-entry-screen hidden">
+
+            <!-- Header: Back | Pay | Help -->
+            <div class="pe-header">
+                <!-- Back Button -->
+                <button onclick="showHome()" style="display: flex; align-items: center; color: #ffffff;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+
+                <h2 style="font-size: 1.25rem; font-weight: 600;">Pay</h2>
+
+                <!-- Help Button -->
+                <button style="display: flex; align-items: center; color: #ffffff;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Payee Info Card -->
+            <div class="pe-card">
+                <div class="pe-avatar" id="peAvatar">BN</div>
+                <div style="flex: 1;">
+                    <div class="pe-name" id="peName">BHAGWATI NISHAD</div>
+                    <div class="pe-upi-row">
+                        <span id="peUpi">nishadbhagwati@ybl</span>
+                        <!-- Verified Check Icon -->
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                <!-- Amount Input -->
+                <div class="pe-input-wrapper">
+                    <div style="position: relative;">
+                        <span class="pe-rupee-icon">₹</span>
+                        <input type="number" id="peAmountInput" class="pe-amount-input" placeholder="Enter amount">
+                    </div>
+                </div>
+
+                <!-- Message Input -->
+                <div class="pe-input-wrapper">
+                    <input type="text" id="peMessageInput" class="pe-msg-input" placeholder="Add a message (optional)">
+                </div>
+            </div>
+
+            <!-- Proceed Button -->
+            <div style="padding-bottom: 1rem;">
+                <button class="pe-btn" id="peProceedBtn" onclick="processReactStylePayment()" disabled>Proceed To Pay</button>
+            </div>
+        </div>
+
+        <!-- NEW: Pin Entry Screen -->
+        <div id="pinEntryScreen" class="pin-screen hidden">
+            <div class="pin-header">ENTER 6-DIGIT UPI PIN</div>
+
+            <!-- Dots Visual -->
+            <div class="pin-dots-container">
+                <div class="pin-dot" id="pin-0"></div>
+                <div class="pin-dot" id="pin-1"></div>
+                <div class="pin-dot" id="pin-2"></div>
+                <div class="pin-dot" id="pin-3"></div>
+                <div class="pin-dot" id="pin-4"></div>
+                <div class="pin-dot" id="pin-5"></div>
+            </div>
+
+            <!-- Info Box (Yellow) -->
+            <div class="pin-info-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3d3856" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <div class="pin-info-text">
+                    You are transferring money from your State Bank Of India account to someone else using UPI
+                </div>
+            </div>
+
+            <!-- Keypad -->
+            <div class="keypad-container">
+                <div class="keypad-row">
+                    <button class="key-btn" onclick="addPin('1')">1</button>
+                    <button class="key-btn" onclick="addPin('2')">2</button>
+                    <button class="key-btn" onclick="addPin('3')">3</button>
+                </div>
+                <div class="keypad-row">
+                    <button class="key-btn" onclick="addPin('4')">4</button>
+                    <button class="key-btn" onclick="addPin('5')">5</button>
+                    <button class="key-btn" onclick="addPin('6')">6</button>
+                </div>
+                <div class="keypad-row">
+                    <button class="key-btn" onclick="addPin('7')">7</button>
+                    <button class="key-btn" onclick="addPin('8')">8</button>
+                    <button class="key-btn" onclick="addPin('9')">9</button>
+                </div>
+                <div class="keypad-row">
+                    <button class="key-btn action" onclick="removePin()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                    <button class="key-btn" onclick="addPin('0')">0</button>
+                    <button class="key-btn action" onclick="validatePin()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+                <!-- NEW: CONNECTING SECURELY SCREEN -->
+        <div id="connectingScreen" class="connecting-screen hidden">
+            <div class="shield-container">
+                <!-- Animated Rings -->
+                <div class="pulse-ring"></div>
+                <div class="pulse-ring"></div>
+                <div class="pulse-ring"></div>
+
+                <!-- Shield Icon (Lucide Style) -->
+                <svg class="shield-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <path d="M9 12l2 2 4-4"></path>
+                </svg>
+            </div>
+
+            <h2 class="connecting-title">Connecting Securely</h2>
+            <p class="connecting-sub">Verifying transaction with bank...</p>
+        </div>
+        <!-- NEW: Payment Success Screen -->
+        <div id="successScreen" class="success-screen hidden">
+            <!-- Top: Success Icon & Title -->
+            <div class="success-header">
+                <div class="success-check-circle">
+    <!-- NEW SVG: Standard, Bold Checkmark -->
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#5a8f47" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <h2 class="success-title">Payment Successful</h2>
+                <div class="success-time" id="successTime">17 December 2025 at 04:12 PM</div>
+            </div>
+
+            <!-- Middle: Receipt Card -->
+            <div class="receipt-card">
+                <div class="receipt-avatar" id="receiptAvatar">BN</div>
+                <div class="receipt-details">
+                    <div class="receipt-name" id="receiptName">BHAGWATI NISHAD</div>
+                    <div class="receipt-upi" id="receiptUpi">nishadbhagwati@ybl</div>
+
+                    <div class="receipt-amount-row">
+                        <div class="receipt-amount">₹<span id="receiptAmount">1,630</span></div>
+                        <div class="split-tag">Split Expense</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span>View Details</span>
+                </button>
+                <button class="action-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    <span>Share Receipt</span>
+                </button>
+            </div>
+
+            <!-- Advertisement Area -->
+            <div class="ad-card">
+                <span class="ad-badge">Ad</span>
+                <div style="flex:1"></div>
+                <div style="width:5px; height:5px; border-radius:50%; border:2px solid #3b82f6;"></div>
+                <p style="font-size: 0.875rem; color: #374151;">Play games with friends on ...</p>
+            </div>
+
+            <!-- Done Button -->
+            <button class="done-btn" onclick="resetApp()">Done</button>
+        </div>
+
+        <!-- Payment Processing Overlay -->
+        <div id="paymentOverlay" class="overlay hidden">
+            <div class="modal">
+                <div class="processing-icon">
+                    <div class="processing-inner"></div>
+                </div>
+                <p style="color: #fff; margin-bottom: 0.5rem;">Processing Payment...</p>
+                <p id="paymentDetails" style="font-size: 0.875rem; color: #9ca3af;"></p>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav" id="bottomNav">
+            <div class="nav-content">
+                <button class="nav-item active" onclick="showHome()">
+                    <i data-lucide="home" class="thin-icon"></i>
+                    <span class="nav-label">Home</span>
+                </button>
+                <button class="nav-item">
+                    <i data-lucide="search" class="thin-icon"></i>
+                    <span class="nav-label">Search</span>
+                </button>
+                <button class="qr-btn" onclick="showScanner()">
+                    <i data-lucide="qr-code" class="thin-icon"></i>
+                </button>
+                <button class="nav-item">
+                    <i data-lucide="minus" class="thin-icon"></i>
+                    <span class="nav-label"> </span>
+                </button>
+                <button class="nav-item">
+                    <i data-lucide="bell" class="thin-icon"></i>
+                    <span class="nav-label">Alerts</span>
+                </button>
+                <button class="nav-item">
+                   <i data-lucide="clock" class="thin-icon"></i>
+                   <span class="nav-label">History</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Initialize Lucide Icons
+        lucide.createIcons();
+
+        // ZXing QR Code Reader
+        const codeReader = new ZXing.BrowserQRCodeReader();
+        let isScanning = false;
+
+        // Contact data for Original Screen
+        const contacts = [
+            { name: 'Amit Kumar', upi: 'amit@paytm', avatar: 'A' },
+            { name: 'Priya Sharma', upi: 'priya@phonepe', avatar: 'P' },
+            { name: 'Rahul Verma', upi: 'rahul@gpay', avatar: 'R' },
+            { name: 'Sneha Patel', upi: 'sneha@paytm', avatar: 'S' },
+            { name: 'Vikram Singh', upi: 'vikram@phonepe', avatar: 'V' },
+            { name: 'Anjali Gupta', upi: 'anjali@paytm', avatar: 'A' },
+        ];
+
+        let selectedContact = null;
+        let flashOn = false;
+        let currentPin = [];
+        let currentPayment = {}; // Store payment details for success screen
+
+        // --- Toast Notification System ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            let icon = '';
+            if(type === 'success') icon = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            else if(type === 'error') icon = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+            else icon = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+
+            toast.innerHTML = `${icon}<span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- Navigation functions ---
+        function showHome() {
+            hideAllScreens();
+            document.getElementById('homeScreen').classList.remove('hidden');
+            document.getElementById('bottomNav').classList.remove('hidden');
+            stopScanning();
+        }
+
+        function showSendMoney() {
+            hideAllScreens();
+            document.getElementById('sendMoneyScreen').classList.remove('hidden');
+            document.getElementById('bottomNav').classList.add('hidden');
+            renderContacts();
+        }
+
+        function showScanner() {
+            hideAllScreens();
+            document.getElementById('scannerScreen').classList.remove('hidden');
+            document.getElementById('bottomNav').classList.add('hidden');
+            startScanning();
+        }
+
+        function hideAllScreens() {
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('sendMoneyScreen').classList.add('hidden');
+            document.getElementById('scannerScreen').classList.add('hidden');
+            document.getElementById('paymentEntryScreen').classList.add('hidden');
+            document.getElementById('pinEntryScreen').classList.add('hidden');
+            document.getElementById('successScreen').classList.add('hidden');
+        }
+
+        // --- Camera / QR Logic ---
+        function startScanning() {
+            const videoElement = document.getElementById('qr-video');
+
+            if (isScanning) return;
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showToast("Camera not supported in this browser.", "error");
+                return;
+            }
+
+            isScanning = true;
+
+            codeReader.decodeFromVideoDevice(null, 'qr-video', (result, err) => {
+                if (result) {
+                    stopScanning();
+                    handleQrResult(result.text);
+                }
+                if (err && !(err instanceof ZXing.NotFoundException)) {
+                    console.error(err);
+                    if(err.name === 'NotAllowedError') {
+                         showToast("Camera permission denied.", "error");
+                         stopScanning();
+                    }
+                }
+            }).catch(err => {
+                console.error(err);
+                showToast("Unable to start camera.", "error");
+                isScanning = false;
+            });
+        }
+
+        function stopScanning() {
+            if (!isScanning) return;
+            codeReader.reset();
+            isScanning = false;
+            const videoElement = document.getElementById('qr-video');
+            if (videoElement) {
+                videoElement.srcObject = null;
+            }
+        }
+
+        // --- Parse UPI String and Route ---
+        function handleQrResult(text) {
+            const parsed = parseUpiString(text);
+
+            if (parsed) {
+                // Populate React-Style Interface
+                document.getElementById('peName').textContent = parsed.name.toUpperCase();
+                document.getElementById('peUpi').textContent = parsed.vpa;
+
+                // Get initials for avatar
+                const initials = parsed.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('peAvatar').textContent = initials;
+
+                // Reset Inputs
+                document.getElementById('peAmountInput').value = '';
+                document.getElementById('peMessageInput').value = '';
+                document.getElementById('peProceedBtn').disabled = true;
+                document.getElementById('peProceedBtn').textContent = "Proceed To Pay";
+                document.getElementById('peProceedBtn').style.backgroundColor = "#3a3a3a";
+
+                showToast(`Scanned: ${parsed.name}`, "success");
+
+                // Switch to Payment Entry Screen
+                hideAllScreens();
+                document.getElementById('paymentEntryScreen').classList.remove('hidden');
+
+            } else {
+                showToast("Invalid QR Code format", "error");
+                showHome();
+            }
+        }
+
+        function parseUpiString(text) {
+            try {
+                let queryString = text;
+                if(text.includes('?')) {
+                    queryString = text.split('?')[1];
+                } else {
+                    queryString = text;
+                }
+
+                const urlParams = new URLSearchParams(queryString);
+
+                const vpa = urlParams.get('pa');
+                const name = decodeURIComponent(urlParams.get('pn') || vpa.split('@')[0] || 'Unknown Payee');
+                const amount = urlParams.get('am');
+
+                if (vpa) {
+                    return { vpa, name, amount };
+                }
+                return null;
+            } catch (e) {
+                console.error("Parsing Error", e);
+                return null;
+            }
+        }
+
+        // --- Gallery Upload Logic ---
+        function triggerFileUpload() {
+            document.getElementById('qr-input-file').click();
+        }
+
+        document.getElementById('qr-input-file').addEventListener('change', (e) => {
+            if (e.target.files.length === 0) return;
+            const file = e.target.files[0];
+            const img = new Image();
+            const reader = new FileReader();
+
+            reader.onload = (event) => {
+                img.src = event.target.result;
+                img.onload = () => {
+                    codeReader.decodeFromImageElement(img)
+                        .then(result => {
+                            handleQrResult(result.text);
+                        })
+                        .catch(err => {
+                            showToast("No QR code found in image.", "error");
+                            console.error(err);
+                        });
+                    e.target.value = '';
+                };
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // --- Render Contacts (Original Screen) ---
+        function renderContacts() {
+            const contactsList = document.getElementById('contactsList');
+            contactsList.innerHTML = contacts.map((contact, index) => `
+                <button class="contact-item" onclick="selectContact(${index})">
+                    <div class="contact-avatar">${contact.avatar}</div>
+                    <div class="contact-info">
+                        <div class="contact-name">${contact.name}</div>
+                        <div class="contact-upi">${contact.upi}</div>
+                    </div>
+                </button>
+            `).join('');
+        }
+
+        // --- Select Contact (Original Screen) ---
+        function selectContact(index) {
+            selectedContact = contacts[index];
+            const items = document.querySelectorAll('.contact-item');
+            items.forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('selected');
+                    item.innerHTML += '<div class="radio-check"><div class="radio-inner"></div></div>';
+                } else {
+                    item.classList.remove('selected');
+                    const radio = item.querySelector('.radio-check');
+                    if (radio) radio.remove();
+                }
+            });
+            document.getElementById('amountSection').classList.remove('hidden');
+        }
+
+        // --- Set Amount (Original Screen) ---
+        function setAmount(value) {
+            document.getElementById('amountInput').value = value;
+            updatePayButton();
+        }
+
+        // --- Update Pay Button (Original Screen) ---
+        document.getElementById('amountInput')?.addEventListener('input', updatePayButton);
+
+        function updatePayButton() {
+            const amount = document.getElementById('amountInput').value;
+            const payBtn = document.getElementById('payBtn');
+            if (amount && parseFloat(amount) > 0) {
+                payBtn.disabled = false;
+                payBtn.textContent = `Pay ₹${amount}`;
+            } else {
+                payBtn.disabled = true;
+                payBtn.textContent = 'Pay ₹0';
+            }
+        }
+
+        // --- React Style Payment Logic ---
+        // Listener for the new input field
+        document.getElementById('peAmountInput')?.addEventListener('input', function(e) {
+            const amount = e.target.value;
+            const btn = document.getElementById('peProceedBtn');
+
+            if (amount && parseFloat(amount) > 0) {
+                btn.disabled = false;
+                btn.style.backgroundColor = "#9333EA"; // Blue
+            } else {
+                btn.disabled = true;
+                btn.style.backgroundColor = "#3a3a3a"; // Gray
+            }
+        });
+
+        // Process payment from React Style Screen
+        function processReactStylePayment() {
+            const name = document.getElementById('peName').textContent;
+            const upi = document.getElementById('peUpi').textContent;
+            const amount = document.getElementById('peAmountInput').value;
+
+            if(!amount) return;
+
+            // Store data for success screen
+            currentPayment = {
+                name: name,
+                upi: upi,
+                amount: amount,
+                avatar: document.getElementById('peAvatar').textContent
+            };
+
+            // Go to PIN Screen
+            showPinScreen();
+        }
+
+        // --- Pin Logic ---
+        function showPinScreen() {
+            hideAllScreens();
+            document.getElementById('pinEntryScreen').classList.remove('hidden');
+            currentPin = []; // Reset PIN
+            updatePinDots();
+        }
+
+        function addPin(number) {
+            if (currentPin.length < 6) {
+                currentPin.push(number);
+                updatePinDots();
+            }
+        }
+
+        function removePin() {
+            if (currentPin.length > 0) {
+                currentPin.pop();
+                updatePinDots();
+            }
+        }
+
+        function updatePinDots() {
+            // Reset all dots
+            document.querySelectorAll('.pin-dot').forEach(dot => dot.classList.remove('filled'));
+
+            // Fill based on length
+            for (let i = 0; i < currentPin.length; i++) {
+                document.getElementById(`pin-${i}`).classList.add('filled');
+            }
+        }
+
+                                function validatePin() {
+            if (currentPin.length === 6) {
+
+                // 1. Hide PIN Screen
+                document.getElementById('pinEntryScreen').classList.add('hidden');
+
+                // 2. Show "Connecting Securely" Screen
+                document.getElementById('connectingScreen').classList.remove('hidden');
+
+                // 3. Wait 2.5 seconds, then show success
+                setTimeout(() => {
+                    // CRITICAL: Hide connecting screen to prevent black screen overlay
+                    document.getElementById('connectingScreen').classList.add('hidden');
+
+                    // Call the dedicated success function
+                    showSuccessScreen();
+
+                }, 2500); // 2.5 seconds delay
+
+            } else {
+                // Error handling for incorrect PIN length
+                showToast("Please enter complete 6-digit PIN", "error");
+                const dotsContainer = document.querySelector('.pin-dots-container');
+                if(dotsContainer) {
+                    dotsContainer.style.animation = "shake 0.3s ease-in-out";
+                    setTimeout(() => { dotsContainer.style.animation = ""; }, 300);
+                }
+            }
+        }
+
+
+        // --- Success Logic ---
+        // --- FIXED SUCCESS LOGIC ---
+        function showSuccessScreen() {
+            // Hide all other screens just to be safe
+            hideAllScreens();
+
+            // 1. Show the Success Screen (Green Background)
+            document.getElementById('successScreen').classList.remove('hidden');
+
+            // 2. Populate Data from the stored payment object
+            // Ensure we don't crash if data is missing
+            if (currentPayment && currentPayment.name) {
+                document.getElementById('receiptName').textContent = currentPayment.name;
+                document.getElementById('receiptUpi').textContent = currentPayment.upi;
+                document.getElementById('receiptAvatar').textContent = currentPayment.avatar;
+
+                // Format amount nicely (e.g., 1,500.00)
+                const formattedAmount = parseFloat(currentPayment.amount).toLocaleString('en-IN', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                });
+                document.getElementById('receiptAmount').textContent = formattedAmount;
+            } else {
+                // Fallback data if currentPayment is empty
+                document.getElementById('receiptName').textContent = "Unknown Merchant";
+                document.getElementById('receiptUpi').textContent = "upi@bank";
+                document.getElementById('receiptAmount').textContent = "0";
+            }
+
+            // 3. Set Current Time
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            document.getElementById('successTime').textContent = `${dateStr} at ${timeStr}`;
+
+            // 4. Play Success Sound (Robust Error Handling)
+            const audio = document.getElementById('successSound');
+            if (audio) {
+                audio.currentTime = 0; // Reset sound to start
+                const playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.warn("Sound file missing or interaction blocked:", error);
+                    });
+                }
+            }
+        }
+        function resetApp() {
+            // Reset inputs completely
+            document.getElementById('peAmountInput').value = '';
+            document.getElementById('peMessageInput').value = '';
+            document.getElementById('peProceedBtn').disabled = true;
+            document.getElementById('peProceedBtn').style.backgroundColor = "#3a3a3a";
+            currentPayment = {};
+
+            showHome();
+        }
+
+        // --- Process Contact Payment (Original Screen) ---
+        function processContactPayment() {
+            const amount = document.getElementById('amountInput').value;
+            if (!selectedContact || !amount) return;
+
+            document.getElementById('paymentDetails').textContent = `₹${amount} to ${selectedContact.name}`;
+            document.getElementById('paymentOverlay').classList.remove('hidden');
+
+            setTimeout(() => {
+                document.getElementById('paymentOverlay').classList.add('hidden');
+                showToast(`✓ Payment of ₹${amount} sent successfully to ${selectedContact.name}`, "success");
+                showHome();
+                selectedContact = null;
+                document.getElementById('amountInput').value = '';
+                document.getElementById('amountSection').classList.add('hidden');
+            }, 2000);
+        }
+
+        // --- Toggle flash ---
+        function toggleFlash() {
+            flashOn = !flashOn;
+            const icon = document.getElementById('flashIcon');
+            const scannerArea = document.querySelector('.scanner-area');
+
+            if (flashOn) {
+                icon.innerHTML = '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>';
+                scannerArea.style.filter = "brightness(1.5)";
+            } else {
+                icon.innerHTML = '<path d="M18 6 6 18M6 6l12 12"></path>';
+                scannerArea.style.filter = "brightness(1)";
+            }
+        }
+
+        // Initialize
+        showHome();
+    </script>
+</body>
+</html>
